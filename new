@@ -1,0 +1,35 @@
+#!/bin/sh
+
+if [ $# -lt 1 ];
+then
+  day=$(date +%d)
+else
+  day=$1
+fi
+
+file="./Days/Day$day.hs"
+
+if [ -e $file ]; then
+  echo "File $file already exists."
+  exit 1
+fi
+
+template="import System.Environment
+import Data.List
+
+part1 :: String -> String
+part1 = \"\"
+
+part2 :: String -> String
+part2 = \"\"
+
+main :: IO()
+main = do
+  args <- getArgs
+  contents <- readFile $ head args
+  
+  putStrLn $ \"Solution Day $day Part 1: \" ++ show (part1 contents)
+  putStrLn $ \"Solution Day $day Part 2: \" ++ show (part2 contents)
+"
+
+echo "$template" >> $file

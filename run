@@ -1,0 +1,10 @@
+#!/bin/sh
+
+file="Days/Day$1"
+input="Inputs/Day$1.txt"
+
+if [ -f "$file" ]; then
+	./$file "$input"
+else
+	stack runhaskell "$file.hs" "$input"
+fi
