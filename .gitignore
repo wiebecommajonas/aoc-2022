@@ -7,3 +7,7 @@
 
 # Data
 .cookie
+
+# Executables
+Days/Day*
+!Days/Day*.hs
