@@ -7,16 +7,16 @@ pairs = cast . map ( map (read :: String -> Int) . splitOn "-") . splitOn ","
   where
     cast [[a,b],[c,d]] = ((a,b),(c,d))
 
+range :: (Int, Int) -> [Int]
+range (x, y) = [x .. y]
+
+mapT f (a,b) = (f a, f b)
+
 contains :: (Pair, Pair) -> Bool
-contains (a, b) = a `inP` b || b `inP` a
-  where
-    inP (a1, a2) (b1, b2) = a1 >= b1 && a2 <= b2
+contains ps@(a, b) = (\x -> x == range a || x == range b) . uncurry intersect . mapT range $ ps
 
 overlaps :: (Pair, Pair) -> Bool
-overlaps ((a1, a2), (b1, b2)) = a \\ b /= a || b \\ a /= b
-   where
-    a = [a1 .. a2]
-    b = [b1 .. b2]
+overlaps = (/= []) . uncurry intersect . mapT range
 
 part1 :: String -> Int
 part1 = length . filter contains . map pairs . lines
