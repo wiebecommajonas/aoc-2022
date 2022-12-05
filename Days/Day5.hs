@@ -11,7 +11,7 @@ collectCrates :: String -> [[Crate]]
 collectCrates input = map crate . chunksOf 4 $ input
 
 collectAllCrates :: [String] -> [[Crate]]
-collectAllCrates = foldl (\a x -> map (uncurry (++)) (zip a x)) (take 9 $ repeat []) . map collectCrates
+collectAllCrates = foldl (fmap (map $ uncurry (++)) . zip) (take 9 $ repeat []) . map collectCrates
 
 parse :: String -> Inst
 parse = castT3 . map read . odds . words
@@ -35,19 +35,18 @@ moveWith :: (Inst -> [[Crate]] -> [[Crate]]) -> [Inst] -> [[Crate]] -> [[Crate]]
 moveWith _ [] cs = cs
 moveWith m (i:is) cs = moveWith m is $ m i cs
 
-part1 :: String -> String
-part1 input = map head . moveWith move9000 is $ cs
+solveWith :: (Inst -> [[Crate]] -> [[Crate]]) -> String -> String
+solveWith m input = map head . moveWith m is $ cs
   where
     [crates, instructions] = map lines . splitOn "\n\n" $ input
     cs = collectAllCrates crates
     is = map parse $ instructions
 
+part1 :: String -> String
+part1 = solveWith move9000
+
 part2 :: String -> String
-part2 input = map head . moveWith move9001 is $ cs
-  where
-    [crates, instructions] = map lines . splitOn "\n\n" $ input
-    cs = collectAllCrates $ init crates
-    is = map parse $ instructions
+part2 = solveWith move9001
 
 main :: IO()
 main = do
@@ -56,4 +55,3 @@ main = do
   
   putStrLn $ "Solution Day 5 Part 1: " ++ show (part1 contents)
   putStrLn $ "Solution Day 5 Part 2: " ++ show (part2 contents)
-
