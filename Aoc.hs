@@ -12,11 +12,16 @@ import qualified Data.Set           as S
 import qualified Data.Vector        as V
 import qualified Text.Parsec        as P
 import qualified Text.Parsec.Char   as PC
-import qualified Text.Parsec.String        (Parser)
+import           Text.Parsec.String        (Parser)
 
 -- .......
 -- | LISTS
 -- .......
+
+takeUntil :: (a -> Bool) -> [a] -> [a]
+takeUntil _ [] = []
+takeUntil p (x:xs) | p x = [x]
+                   | otherwise = x : takeUntil p xs
 
 insertAt :: Int -> a -> [a] -> [a]
 insertAt i a as = take i as ++ a : (drop i as)

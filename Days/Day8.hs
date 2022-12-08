@@ -9,27 +9,33 @@ data Direction = North | East | South | West deriving (Show, Eq)
 
 directions = [North, East, South, West]
 
+-- map forrest with coordinates
 mapCoords :: [String] -> Forrest
 mapCoords f = [ [ ((x, y), t) | (t, x) <- zip fl [0..] ] | (fl, y) <- zip f [0..]]
 
+-- take visible trees from front of list
 visible :: [Tree] -> [Tree]
 visible = snd . foldl (\(h, ls) t@(_,l) -> if l>h then (l, t:ls) else (h, ls)) (minBound, [])
 
+-- get height of tree at coord
 height :: Coord -> Forrest -> Height
 height (x, y) forrest = snd $ (forrest !! y) !! x
 
+-- get visible trees looking at the forrest from a specific direction
 visibleFrom :: Direction -> Forrest -> [Tree]
 visibleFrom West = concat . map visible
 visibleFrom North = concat . map visible . transpose
 visibleFrom East = concat . map (visible . reverse)
 visibleFrom South = concat . map (visible . reverse) . transpose
 
+-- get visible trees looking from a tree inside the forrest at a specific coodinate
 visibleFromTree :: Coord -> Direction -> Forrest -> [Tree]
 visibleFromTree c@(x,y) West forrest = takeUntil ((>= height c forrest) . snd) . reverse . take x $ forrest !! y
 visibleFromTree c@(x,y) East forrest = takeUntil ((>= height c forrest) . snd) . drop (x+1) $ forrest !! y
 visibleFromTree (x,y) North forrest = visibleFromTree (y,x) West $ transpose forrest
 visibleFromTree (x,y) South forrest = visibleFromTree (y,x) East $ transpose forrest
 
+-- compute scenic score of tree at coord
 scenicScore :: Coord -> Forrest -> Int
 scenicScore c forrest = product $ map (\d -> length $ visibleFromTree c d forrest) directions
 

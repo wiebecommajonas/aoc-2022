@@ -1,26 +1,12 @@
-import Aoc hiding (deleteBy)
+import Aoc
 import qualified Data.Map.Strict as M (Map, lookup, unions, unionsWith, insert, empty, filter, foldl)
 import Text.Parsec (try, optionMaybe, getPosition, eof, parse, many, manyTill, (<|>))
 import Text.Parsec.Char (char, anyChar, string, digit, endOfLine, space)
 import Text.Parsec.String (Parser)
 
-deleteBy :: (a -> Bool) -> [a] -> [a]
-deleteBy _ [] = []
-deleteBy p (x:xs) | p x = deleteBy p xs
-                  | otherwise = x : deleteBy p xs
-
-data Cmd = Cd String | Ls deriving (Eq, Show)
-data Item = File Int String | Dir String deriving (Eq, Show, Ord)
+data Cmd = Cd String | Ls deriving (Eq)
+data Item = File Int String | Dir String deriving (Eq, Ord)
 data Tree a = Branch a [Tree a] deriving (Eq)
-
--- instance Show Item where
---   show (File s n) = "- " ++ n ++ " (file, size=" ++ show s ++ ")"
---   show (Dir n) = "- " ++ n ++ " (dir)"
-
-instance Show a => Show (Tree a) where
-  show t = showLevel 0 t
-    where
-      showLevel l (Branch r bs) = (take l $ repeat ' ') ++ show r ++ "\n" ++ concat (map (showLevel (l+1)) bs)
 
 isDir :: Item -> Bool
 isDir (Dir _) = True
@@ -36,8 +22,13 @@ leaf a = Branch a []
 root :: Tree a -> a
 root (Branch r _) = r
 
+-- compares roots of trees
 (==*) :: Eq a => Tree a -> Tree a -> Bool
 (==*) a b = root a == root b
+
+-- .......
+-- PARSING
+-- .......
 
 integer :: Parser Int
 integer = many digit >>= return . read
@@ -71,20 +62,20 @@ dirTree :: Parser [Tree Item]
 dirTree = do
   maybeEof <- optionMaybe eof
   if isJust maybeEof
-    then return []
+    then return [] -- go up one level
     else do
       cdCmd <- cmd
       pos <- getPosition
       case cdCmd of
-        Cd ".." -> return []
+        Cd ".." -> return [] -- go up one level
         _ -> do
-          cmd
+          cmd -- skip ls command
           items <- many item >>= return . map leaf . filter (not . isDir)
           let root = case cdCmd of
                        Cd dir -> Dir (dir ++ show pos) -- ensure unique Dir names
                        _ -> error "no root"
-          next <- dirTree
-          nnext <- dirTree
+          next <- dirTree -- deeper level
+          nnext <- dirTree -- same level
           return $ [Branch root (items ++ next)] ++ nnext
 
 parseTree :: String -> Tree Item
@@ -92,6 +83,7 @@ parseTree input = case parse dirTree "" input of
                 Left e -> error $ show e
                 Right r -> head r
 
+-- compute size of Dir (tree)
 size :: Tree Item -> Int
 size (Branch (File s _) _) = s
 size (Branch _ bs) = sum . map size $ bs
