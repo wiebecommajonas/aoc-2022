@@ -35,9 +35,8 @@ diag :: Coord -> Coord -> Bool
 diag x y = all (/=0) $ diffs x y
 
 chase1 :: Coord -> Coord -> Coord
-chase1 h@(hx,hy) t@(tx,ty) | dist h t <= 1 = t
-                           | dist h t > 2 = error "should not occur"
-                           | otherwise = (uncurry (***)) (castT2 . map diagFn $ diffs t h) t
+chase1 h t | dist h t <= 1 = t -- should never be > 2
+           | otherwise = (uncurry (***)) (castT2 . map diagFn $ diffs t h) t
   where
     diagFn i | i < 0 = subtract 1
              | i > 0 = (+) 1
