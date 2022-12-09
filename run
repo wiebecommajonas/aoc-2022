@@ -2,13 +2,18 @@
 
 file="Days/Day$1"
 input="Inputs/Day$1.txt"
+flags=""
 
 if [ $# -gt 1 ]; then
-	input=$2
+	if [ $2 = "--visualize" ]; then
+		flags=$2
+	else
+		input=$2
+	fi
 fi
 
 if [ -f "$file" ]; then
 	./$file "$input"
 else
-	stack runhaskell "$file.hs" "$input"
+	stack runhaskell "$file.hs" "$input" -- $flags
 fi
