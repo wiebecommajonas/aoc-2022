@@ -4,21 +4,11 @@ import qualified Data.Set as S
 type Coord = (Int, Int)
 data Dir = North | East | South | West deriving (Eq, Show)
 data Inst = Move Dir Int deriving (Eq, Show)
-data Rope = Rope Coord [Coord]
 data Path = Path [Coord]
 
 instance Show Path where
   show (Path cs) = unlines $ reverse [ [ if (x,y) `elem` cs then '#' else '.' | x <- [minX .. maxX] ] | y <- [minY .. maxY]]
     where
-      minWith f = minimum $ map f cs
-      maxWith f = maximum $ map f cs
-      (minX, maxX) = (minWith fst, maxWith fst)
-      (minY, maxY) = (minWith snd, maxWith snd)
-
-instance Show Rope where
-  show (Rope h t) = unlines $ reverse [ concat [ let i = elemIndex (x,y) cs in if isJust i then show (fromJust i) else "." | x <- [minX .. maxX] ] | y <- [minY .. maxY]]
-    where
-      cs = h:t
       minWith f = minimum $ map f cs
       maxWith f = maximum $ map f cs
       (minX, maxX) = (minWith fst, maxWith fst)
@@ -46,15 +36,12 @@ diag x y = all (/=0) $ diffs x y
 
 chase1 :: Coord -> Coord -> Coord
 chase1 h@(hx,hy) t@(tx,ty) | dist h t <= 1 = t
-                          | dist h t > 2 = error "should not occur"
-                          | diag h t = chaseDiag h t
-                          | tx == hx  = if hy > ty then (tx  ,ty+1) else (tx  ,ty-1)
-                          | otherwise = if hx > tx then (tx+1,ty  ) else (tx-1,ty  )
+                           | dist h t > 2 = error "should not occur"
+                           | otherwise = (uncurry (***)) (castT2 . map diagFn $ diffs t h) t
   where
-    chaseDiag h t@(tx,ty) | all (>0) $ diffs t h = mapT2 (+1) t
-                          | all (<0) $ diffs t h = mapT2 (+(-1)) t
-                          | (>0) . head $ diffs t h = (tx+1,ty-1)
-                          | otherwise = (tx-1,ty+1)
+    diagFn i | i < 0 = subtract 1
+             | i > 0 = (+) 1
+             | otherwise = id
 
 chase :: Coord -> [Coord] -> [Coord]
 chase _ [] = []
